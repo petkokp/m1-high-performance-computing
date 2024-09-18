@@ -53,7 +53,7 @@ int main(int argc, char *argv[])
 
     auto start = std::chrono::high_resolution_clock::now();
 
-#pragma omp parallel default(none) num_threads(4) shared(A, localSum, sum, N)
+#pragma omp parallel default(none) shared(A, localSum, sum, N)
     {
         int thid = omp_get_thread_num();
 
