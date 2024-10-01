@@ -1,4 +1,4 @@
-// d) The speedup and parallel efficiency are not significant for this example because the size of the array is too small.
+// d) The parallel version for this example is slower because the size of the array is too small.
 // If the size is increased the speedup and the parallel efficiency are improved. (calculated speedup is 0.14 and calculated
 // parallel efficiency is 0.035 for this example with 4 threads).
 

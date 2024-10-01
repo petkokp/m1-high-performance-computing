@@ -30,7 +30,7 @@ int main()
   std::cout << "Temps parallel omp for: " << tempsOmpFor.count() << "s\n";
 
   // Compute pi with a loop parallalized "by hand"
-  // Calculer le pi avec boucle parallele faite a la main
+  // Calculer le pi avec boucle parallacceleration using differentele faite a la main
   pi = 0.0;
   start = std::chrono::high_resolution_clock::now();
   // TODO / A FAIRE ...
