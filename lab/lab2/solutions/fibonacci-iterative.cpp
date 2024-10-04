@@ -1,3 +1,5 @@
+// The speedup increases with more threads
+
 #include <cstdio>
 #include <cstdlib>
 #include <iostream>
