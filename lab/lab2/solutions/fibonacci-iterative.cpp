@@ -21,8 +21,8 @@ int main(int argc, char **argv) {
 
     // Allocate and initialize the array containing Fibonacci numbers
     int fib[N];
-    fib[0] = 0; // F(0) = 0
-    fib[1] = 1; // F(1) = 1
+    fib[0] = 0;
+    fib[1] = 1;
 
     auto start = std::chrono::high_resolution_clock::now();
 
