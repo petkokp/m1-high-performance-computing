@@ -1,6 +1,10 @@
+// The speedup increases with more threads
+
 #include <cstdio>
 #include <cstdlib>
 #include <omp.h>
+#include <chrono>
+#include <iostream>
 
 void printUsage(int argc, char **argv)
 {
@@ -34,6 +38,8 @@ int main(int argc, char **argv)
   // Read the index of the Fibonacci number to compute
   const int N = atoi(argv[1]);
 
+  auto start = std::chrono::high_resolution_clock::now();
+
   // Create threads, then call the function fib(N) from a single thread. fib(N) should create tasks for recursive calls,
   // which will be executed by other available threads.
   #pragma omp parallel
@@ -44,6 +50,12 @@ int main(int argc, char **argv)
       printf("Fibonacci(%d) = %d\n", N, result);
     }
   }
+
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed = end - start;
+
+    // Display the elapsed time
+    std::cout << "Elapsed time: " << elapsed.count() << " seconds\n";
 
   return 0;
 }
