@@ -1,3 +1,33 @@
+// Results for N=2048, with B1=32 and B2=256:
+
+// Sequential scalar matmat i->j->k took 4.599354e+01s.
+// Performance: 373.35 Mflops/s
+
+// Sequential scalar matmat i->k->j took 1.84e+01s.
+// Performance: 933.92 Mflops/s
+
+// Single tile scalar matmat i->k->j took 2.29e+01s.
+// Performance: 749.52 Mflops/s
+
+// Double tile scalar matmat i->k->j took 2.14e+01s.
+// Performance: 803.94 Mflops/s
+
+// Double tile AVX matmat i->k->j took 4.53e+00s.
+// Performance: 3791.82 Mflops/s
+
+// Task parallel double tile AVX matmat i->k->j took 6.57e-01s.
+// Performance: 26125.54 Mflops/s
+
+// b) The second version is faster because of contiguous memory
+// accesses for the B matrix.
+
+// c) The algorithm is much slower with low B1 values  B1 values
+// because we do not use the cache as much as we could and
+// the creation of the tiles is slow.
+// The optimal B1 value based on my L1 and L2 cache is 64.
+
+// g) Speedup for N=2048 is 70. Around 10% of the peak performance of my computer was used.
+
 #include <iostream>
 #include <iomanip>
 #include <vector>
@@ -62,26 +92,6 @@ inline void multiplyTile(float *tA, float *tB, float *tC, __m256 atile[8], __m25
   storeTile(ctile, tC, N);
 }
 
-// inline void multiplyTile(float *tA, float *tB, float *tC, __m256 atile[8], __m256 btile[8], __m256 ctile[8], int N)
-// {
-//   loadTile(btile, tB, N);
-//   loadTile(ctile, tC, N);
-
-//   // Loop over i (rows of Atile)
-//   for (int i = 0; i < 8; i++) {
-//     // Loop over k (columns of Atile and rows of Btile)
-//     for (int k = 0; k < 8; k++) {
-//       // Broadcast Atile(i, k) value to all elements of a vector
-//       __m256 a_broadcast = _mm256_broadcast_ss(&tA[i * N + k]);
-
-//       // Perform FMA (fused multiply-add) operation
-//       ctile[i] = _mm256_fmadd_ps(a_broadcast, btile[k], ctile[i]);
-//     }
-//   }
-
-//   storeTile(ctile, tC, N);
-// }
-
 int main(int argc, char **argv)
 {
   if (argc != 2) {
@@ -89,11 +99,10 @@ int main(int argc, char **argv)
     return 0;
   }
   int N = std::atoi(argv[1]);
-  const int B1 = 32;
-  const int B2 = 256;
+  const int B1 = 64;
+  const int B2 = 512;
 
   // Allocate and initialize the matrix A and vectors x, b
-  // Allouer et initialiser la matrice A et matrices x, b
   float *A = (float *)_mm_malloc(N * N * sizeof(float), 32);
   float *B = (float *)_mm_malloc(N * N * sizeof(float), 32);
   float *C = (float *)_mm_malloc(N * N * sizeof(float), 32);
@@ -106,13 +115,12 @@ int main(int argc, char **argv)
   }
 
   // Sequential and scalar matrix-matrix multiplication code with loop order i->j->k
-  // Code sequentiel et scalaire produit matrice-matrice avec l'ordre de boucles i->j->k
   {
     auto start = std::chrono::high_resolution_clock::now();
     for (int i = 0; i < N; i++) {
       for (int j = 0; j < N; j++) {
         for (int k = 0; k < N; k++) {
-          C[i * N + j] += A[i * N + k] * B[k * N + j]; // C(i, j) = C(i, j) + A(i, k) * B(k, j)
+          C[i * N + j] += A[i * N + k] * B[k * N + j];
         }
       }
     }
@@ -124,7 +132,6 @@ int main(int argc, char **argv)
   }
 
   // Sequential and scalar matrix-matrix multiplication code with loop order i->k->j
-  // Code sequentiel et scalaire produit matrice-matrice avec l'ordre de boucles i->k->j
   {
     auto start = std::chrono::high_resolution_clock::now();
     for (int repeat = 0; repeat < NREPEAT; repeat++) {
@@ -132,7 +139,7 @@ int main(int argc, char **argv)
       for (int i = 0; i < N; i++) {
         for (int k = 0; k < N; k++) {
           for (int j = 0; j < N; j++) {
-            C[i * N + j] += A[i * N + k] * B[k * N + j]; // C(i, j) = C(i, j) + A(i, k) * B(k, j)
+            C[i * N + j] += A[i * N + k] * B[k * N + j];
           }
         }
       }
@@ -145,7 +152,6 @@ int main(int argc, char **argv)
   }
 
   // Sequential and scalar matrix-matrix multiplication code with loop order i->k->j and single level tiling
-  // Code sequentiel et scalaire produit matrice-matrice avec l'ordre de boucles i->k->j et tuilage d'un niveau
   {
     auto start = std::chrono::high_resolution_clock::now();
     for (int repeat = 0; repeat < NREPEAT; repeat++) {
@@ -176,7 +182,6 @@ int main(int argc, char **argv)
 
 
   // Sequential and scalar matrix-matrix multiplication code with loop order i->k->j and two level tiling
-  // Code sequentiel et scalaire produit matrice-matrice avec l'ordre de boucles i->k->j et tuilage de deux niveaux
   {
     auto start = std::chrono::high_resolution_clock::now();
     for (int repeat = 0; repeat < NREPEAT; repeat++) {
@@ -213,7 +218,6 @@ int main(int argc, char **argv)
 
 
   // Vectorized matrix-matrix multiplication code with loop order i->k->j and two level tiling + AVX
-  // Produit matrice-matrice vectorise avec l'ordre de boucles i->k->j et tuilage de deux niveaux + AVX
   {
     auto start = std::chrono::high_resolution_clock::now();
     for (int repeat = 0; repeat < NREPEAT; repeat++) {
@@ -244,8 +248,6 @@ int main(int argc, char **argv)
   }
 
   // Task-parallel and vectorized matrix-matrix multiplication code with loop order i->k->j and two level tiling + AVX
-  // Produit matrice-matrice vectorise et parallelise par taches avec l'ordre de boucles i->k->j et tuilage de deux
-  // niveaux+AVX
   {
     auto start = std::chrono::high_resolution_clock::now();
     for (int repeat = 0; repeat < NREPEAT; repeat++) {
@@ -281,7 +283,6 @@ int main(int argc, char **argv)
   }
 
   // Free matrices
-  // Desallouer les matrices
   _mm_free(A);
   _mm_free(B);
   _mm_free(C);
