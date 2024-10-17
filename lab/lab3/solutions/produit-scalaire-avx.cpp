@@ -16,7 +16,7 @@
 inline float dotProduct(float *A, float *B, int size)
 {
   float result = 0.0f;
-  for (size_t i = 0; i < size; i++) { 
+  for (int i = 0; i < size; i++) { 
     result += A[i] * B[i];
   }
   return result;
@@ -25,7 +25,7 @@ inline float dotProduct(float *A, float *B, int size)
 inline float dotProductAVX(float *A, float *B, int size)
 {
   __m256 result = _mm256_set1_ps(0.0f);
-  for (size_t i = 0; i < size; i += 8) {
+  for (int i = 0; i < size; i += 8) {
     __m256 vecA = _mm256_load_ps(A + i);
     __m256 vecB = _mm256_load_ps(B + i);
     __m256 product = _mm256_mul_ps(vecA, vecB);
@@ -39,7 +39,7 @@ inline float dotProductAVX(float *A, float *B, int size)
 inline float dotProductAVXFMA(float *A, float *B, int size)
 {
   __m256 result = _mm256_set1_ps(0.0f);
-  for (size_t i = 0; i < size; i += 8) {
+  for (int i = 0; i < size; i += 8) {
     __m256 vecA = _mm256_load_ps(A + i);
     __m256 vecB = _mm256_load_ps(B + i);
     result = _mm256_fmadd_ps(vecA, vecB, result);
@@ -55,7 +55,7 @@ inline float dotProductAVXFMALoopUnrolling(float *__restrict__ A, float *__restr
   __m256 result2 = _mm256_set1_ps(0.0f);
   __m256 result3 = _mm256_set1_ps(0.0f);
   __m256 result4 = _mm256_set1_ps(0.0f);
-  for (size_t i = 0; i < size; i += 32) {
+  for (int i = 0; i < size; i += 32) {
     __m256 vecA1 = _mm256_load_ps(A + i);
     __m256 vecA2 = _mm256_load_ps(A + i + 8);
     __m256 vecA3 = _mm256_load_ps(A + i + 16);
