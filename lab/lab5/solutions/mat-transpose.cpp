@@ -1,3 +1,16 @@
+// Results for N=2048 and B1=64
+// Sequential transpose: 0.0164228s
+// Performance: 1.02158GB/s
+
+// AVX transpose: 0.00689669s
+// Performance: 2.43265GB/s
+
+// AVX in-place transpose: 0.00498488s
+// Performance: 3.36562GB/s
+
+// AVX in-place transpose with OpenMP tasks: 0.00506033s
+// Performance: 3.31544GB/s
+
 #include <iostream>
 #include <iomanip>
 #include <vector>
@@ -205,7 +218,7 @@ int main(int argc, char **argv)
   {
     memcpy(B, A, N * N * sizeof(float));
     auto start = std::chrono::high_resolution_clock::now();
-    int B1 = 64; // Tile size for each task
+    int B1 = 256; // Tile size for each task
     for (int repet = 0; repet < NREPET; repet++) {
       #pragma omp parallel num_threads(16)
       {
