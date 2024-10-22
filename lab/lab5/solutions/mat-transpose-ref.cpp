@@ -85,14 +85,38 @@ inline void transAVX8x8_ps(__m256 tile[8])
   // TODO / A FAIRE ...
   // Compute tile2 from tile using _mm256_unpacklo_ps and _mm256_unpackhi_ps
   // Calculer tile2 de tile en utilisant _mm256_unpacklo_ps et _mm256_unpackhi_ps
+  tile2[0] = _mm256_unpacklo_ps(tile[0], tile[1]);
+  tile2[1] = _mm256_unpackhi_ps(tile[0], tile[1]);
+  tile2[2] = _mm256_unpacklo_ps(tile[2], tile[3]);
+  tile2[3] = _mm256_unpackhi_ps(tile[2], tile[3]);
+  tile2[4] = _mm256_unpacklo_ps(tile[4], tile[5]);
+  tile2[5] = _mm256_unpackhi_ps(tile[4], tile[5]);
+  tile2[6] = _mm256_unpacklo_ps(tile[6], tile[7]);
+  tile2[7] = _mm256_unpackhi_ps(tile[6], tile[7]);
   
   // TODO / A FAIRE ...
   // Compute tile3 from tile2 using _mm256_shuffle_ps
   // Calculer tile3 de tile2 en utilisant _mm256_shuffle_ps
+  tile3[0] = _mm256_shuffle_ps(tile2[0], tile2[2], _MM_SHUFFLE(1, 0, 1, 0));
+  tile3[1] = _mm256_shuffle_ps(tile2[0], tile2[2], _MM_SHUFFLE(3, 2, 3, 2));
+  tile3[2] = _mm256_shuffle_ps(tile2[1], tile2[3], _MM_SHUFFLE(1, 0, 1, 0));
+  tile3[3] = _mm256_shuffle_ps(tile2[1], tile2[3], _MM_SHUFFLE(3, 2, 3, 2));
+  tile3[4] = _mm256_shuffle_ps(tile2[4], tile2[6], _MM_SHUFFLE(1, 0, 1, 0));
+  tile3[5] = _mm256_shuffle_ps(tile2[4], tile2[6], _MM_SHUFFLE(3, 2, 3, 2));
+  tile3[6] = _mm256_shuffle_ps(tile2[5], tile2[7], _MM_SHUFFLE(1, 0, 1, 0));
+  tile3[7] = _mm256_shuffle_ps(tile2[5], tile2[7], _MM_SHUFFLE(3, 2, 3, 2));
 
   // TODO / A FAIRE ...
   // Compute tile from tile3 using _mm256_permute2f128_ps
   // Calculer tile de tile3 en utilisant _mm256_permute2f128_ps
+  tile[0] = _mm256_permute2f128_ps(tile3[0], tile3[4], 0x20);
+  tile[1] = _mm256_permute2f128_ps(tile3[1], tile3[5], 0x20);
+  tile[2] = _mm256_permute2f128_ps(tile3[2], tile3[6], 0x20);
+  tile[3] = _mm256_permute2f128_ps(tile3[3], tile3[7], 0x20);
+  tile[4] = _mm256_permute2f128_ps(tile3[0], tile3[4], 0x31);
+  tile[5] = _mm256_permute2f128_ps(tile3[1], tile3[5], 0x31);
+  tile[6] = _mm256_permute2f128_ps(tile3[2], tile3[6], 0x31);
+  tile[7] = _mm256_permute2f128_ps(tile3[3], tile3[7], 0x31);
 }
 
 // Transposition of an 8x8 submatrix at address tA, and stores it in the 8x8 submatrix at address tB
@@ -109,6 +133,12 @@ inline void transAVX8x8(float *tA, float *tB, __m256 tile[8], int N)
 inline void transAVX8x8InPlace(float *tA, float *tA2, __m256 tile[8], __m256 tile2[8], int N)
 {
   // TODO / A FAIRE ...
+  loadTile(tile, tA, N);
+  loadTile(tile2, tA2, N);
+  transAVX8x8_ps(tile);
+  transAVX8x8_ps(tile2);
+  storeTile(tile, tA2, N);
+  storeTile(tile2, tA, N);
 }
 
 int main(int argc, char **argv)
@@ -139,6 +169,7 @@ int main(int argc, char **argv)
   // Transposer la matrice avec un code sequentiel et scalaire (non-vectorise)
   {
     auto start = std::chrono::high_resolution_clock::now();
+    // TODO / A FAIRE ...
     for (int repet = 0; repet < NREPET; repet++) {
       for (int i = 0; i < N; i++) {
         for (int j = 0; j < N; j++) {
@@ -158,9 +189,13 @@ int main(int argc, char **argv)
   {
     memset(B, 0, N * N * sizeof(float));
     auto start = std::chrono::high_resolution_clock::now();
+    // TODO / A FAIRE ...
     for (int repet = 0; repet < NREPET; repet++) {
-      // TODO / A FAIRE ...
-
+      for (int i = 0; i < N; i += 8) {
+        for (int j = 0; j < N; j += 8) {
+          transAVX8x8(&A[i * N + j], &B[j * N + i], tile, N);
+        }
+      }
     }
     std::chrono::duration<double> time = std::chrono::high_resolution_clock::now() - start;
     std::cout << "AVX transpose: " << 1000 * time.count() / NREPET << "ms\n";
@@ -174,8 +209,13 @@ int main(int argc, char **argv)
   {
     memcpy(B, A, N * N * sizeof(float));
     auto start = std::chrono::high_resolution_clock::now();
+    // TODO / A FAIRE ...
     for (int repet = 0; repet < NREPET; repet++) {
-      // TODO / A FAIRE ...
+      for (int i = 0; i < N; i += 8) {
+        for (int j = 0; j <= i; j += 8) {
+          transAVX8x8InPlace(&A[i * N + j], &A[j * N + i], tile, tile2, N);
+        }
+      }
     }
     std::chrono::duration<double> time = std::chrono::high_resolution_clock::now() - start;
     std::cout << "AVX in-place transpose: " << 1000 * time.count() / NREPET << "ms\n";
@@ -190,9 +230,29 @@ int main(int argc, char **argv)
   {
     memcpy(B, A, N * N * sizeof(float));
     auto start = std::chrono::high_resolution_clock::now();
+    // TODO / A FAIRE ...
     int B1 = 128; // Tile size for each task / Taille de tuile pour chaque tache
     for (int repet = 0; repet < NREPET; repet++) {
-      // TODO / A FAIRE ...
+#pragma omp parallel default(none) shared(A, N, B1, tile, tile2)
+      {
+#pragma omp single
+        {
+          for (int i = 0; i < N; i += B1) {
+            for (int j = 0; j <= i; j += B1) {
+#pragma omp task default(none) shared(A, N, B1) firstprivate(i, j) private(tile, tile2)
+              {
+                int i1max = std::min(i + B1, N);
+                for (int i1 = i; i1 < i1max; i1 += 8) {
+                  int j1max = std::min(j + B1, i1 + 1);
+                  for (int j1 = j; j1 < j1max; j1 += 8) {
+                    transAVX8x8InPlace(&A[i1 * N + j1], &A[j1 * N + i1], tile, tile2, N);
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
     std::chrono::duration<double> time = std::chrono::high_resolution_clock::now() - start;
     std::cout << "AVX in-place transpose with OpenMP tasks: " << 1000 * time.count() / NREPET << "ms\n";
