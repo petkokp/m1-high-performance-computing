@@ -160,6 +160,16 @@ int main()
   // Perform a Cholesky factorization on the matrix A, A = L LˆT using the potrf function (LAPACK)
   // Effecture une factorisation Cholesky sur la matrice A, A = L L^T avec la fonction potrf (LAPACK)
   // TODO / A FAIRE
+  char uplo = 'L';
+  int info;
+  B = A;
+  dpotrf_(&uplo, &N, &A[0], &N, &info);
+  if (info != 0) {
+    std::cerr << "dpotrf failed with info = " << info << std::endl;
+    return 1;
+  }
+  std::cout << "Matrix A (Cholesky factorization):" << std::endl;
+  printMatrix(A, N, N);
 
   // Solve the linear system A x = L L^T x = b by first solving L y = b, then solving LˆT x = y, with two successive
   // calls to dtrsv
