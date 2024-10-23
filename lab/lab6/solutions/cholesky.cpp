@@ -149,6 +149,13 @@ int main()
   printMatrix(b, N, 1);
 
   // Generate a symmetric positive definite matrix A = L * L^T using the dsyrk function (BLAS3)
+  char trans = 'N';
+  char transT = 'T';
+  double alpha = 1.0;
+  double beta = 0.0;
+  dgemm_(&trans, &transT, &N, &N, &N, &alpha, &L[0], &N, &L[0], &N, &beta, &A[0], &N);
+  std::cout << "Matrix A (L * L^T):" << std::endl;
+  printMatrix(A, N, N);
 
   // Perform a Cholesky factorization on the matrix A, A = L LˆT using the potrf function (LAPACK)
   // Effecture une factorisation Cholesky sur la matrice A, A = L L^T avec la fonction potrf (LAPACK)
