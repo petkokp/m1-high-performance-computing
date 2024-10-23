@@ -182,9 +182,19 @@ int main()
 
   // Verify the solution x by computing b2 = A x using dgemv, then compare it to the initial right hand side vector by
   // computing (b - b2) using daxpy, and computing the norm of this vector~(which is the error) by dnrm2
-  // Verifier la solution x en calculant b2 = A x avec dgemv, puis en le comparant au second membre initial en calculant
-  // (b - b2) avec daxpy d'abord, en suite en calculant la norme de ce vecteur~(ce qui est l'erreur) avec dnrm2.
-  // TODO / A FAIRE
+  alpha = 1.0;
+  beta = 0.0;
+  dgemv_(&trans, &N, &N, &alpha, &B[0], &N, &x[0], &incx, &beta, &b2[0], &incx);
+  std::cout << "Vector b2 (verification):" << std::endl;
+  printMatrix(b2, N, 1);
+
+  alpha = -1.0;
+  daxpy_(&N, &alpha, &b[0], &incx, &b2[0], &incx);
+  std::cout << "Vector b2 - b:" << std::endl;
+  printMatrix(b2, N, 1);
+
+  double error = dnrm2_(&N, &b2[0], &incx);
+  std::cout << "error norm: " << error << "\n" << std::endl;
 
   return 0;
 }
