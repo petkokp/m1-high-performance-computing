@@ -158,8 +158,6 @@ int main()
   printMatrix(A, N, N);
 
   // Perform a Cholesky factorization on the matrix A, A = L LˆT using the potrf function (LAPACK)
-  // Effecture une factorisation Cholesky sur la matrice A, A = L L^T avec la fonction potrf (LAPACK)
-  // TODO / A FAIRE
   char uplo = 'L';
   int info;
   B = A;
