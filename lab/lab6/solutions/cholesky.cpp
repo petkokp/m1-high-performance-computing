@@ -169,11 +169,16 @@ int main()
   std::cout << "Matrix A (Cholesky factorization):" << std::endl;
   printMatrix(A, N, N);
 
-  // Solve the linear system A x = L L^T x = b by first solving L y = b, then solving LˆT x = y, with two successive
-  // calls to dtrsv
-  // Resoudre le systeme lineaire A x = L L^T x = b, d'abort en resolvant L y = b, ensuite LˆT x = y avec deux appels
-  // successifs au dtrsv.
-  // TODO / A FAIRE
+  // Solve the linear system A x = L L^T x = b by first solving L y = b, then solving LˆT x = y, with two successive calls to dtrsv
+  std::copy(b.begin(), b.end(), b2.begin());
+  char diag = 'N';
+  int incx = 1;
+  dtrsv_(&uplo, &trans, &diag, &N, &A[0], &N, &b2[0], &incx);
+  std::cout << "Solution vector L y = b:" << std::endl;
+  printMatrix(b2, N, 1);
+
+  dtrsv_(&uplo, &transT, &diag, &N, &A[0], &N, &b2[0], &incx);
+  std::copy(b2.begin(), b2.end(), x.begin());
 
   // Verify the solution x by computing b2 = A x using dgemv, then compare it to the initial right hand side vector by
   // computing (b - b2) using daxpy, and computing the norm of this vector~(which is the error) by dnrm2
